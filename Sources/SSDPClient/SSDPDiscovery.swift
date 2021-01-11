@@ -1,6 +1,4 @@
 import Foundation
-import HeliumLogger
-import LoggerAPI
 import Socket
 
 // MARK: Protocols
@@ -47,11 +45,7 @@ public class SSDPDiscovery {
     }
 
     // MARK: Initialisation
-
-    public init() {
-        HeliumLogger.use()
-    }
-
+    public init() { }
     deinit {
         self.stop()
     }
@@ -67,12 +61,12 @@ public class SSDPDiscovery {
             if bytesRead > 0 {
                 let response = String(data: data, encoding: .utf8)
                 let (remoteHost, _) = Socket.hostnameAndPort(from: address!)!
-                Log.debug("Received: \(response!) from \(remoteHost)")
+                print("Received: \(response!) from \(remoteHost)")
                 self.delegate?.ssdpDiscovery(self, didDiscoverService: SSDPService(host: remoteHost, response: response!))
             }
 
         } catch let error {
-            Log.error("Socket error: \(error)")
+            print("Socket error: \(error)")
             self.forceStop()
             self.delegate?.ssdpDiscovery(self, didFinishWithError: error)
         }
@@ -110,7 +104,7 @@ public class SSDPDiscovery {
             - searchTarget: The type of the searched service.
     */
     open func discoverService(forDuration duration: TimeInterval = 10, searchTarget: String = "ssdp:all") {
-        Log.info("Start SSDP discovery for \(Int(duration)) duration...")
+        print("Start SSDP discovery for \(Int(duration)) duration...")
         self.delegate?.ssdpDiscoveryDidStart(self)
 
         let message = "M-SEARCH * HTTP/1.1\r\n" +
@@ -125,11 +119,11 @@ public class SSDPDiscovery {
 
             self.readResponses(forDuration: duration)
 
-            Log.debug("Send: \(message)")
+            print("Send: \(message)")
             try self.socket?.write(from: message, to: Socket.createAddress(for: "239.255.255.250", on: 1900)!)
 
         } catch let error {
-            Log.error("Socket error: \(error)")
+            print("Socket error: \(error)")
             self.forceStop()
             self.delegate?.ssdpDiscovery(self, didFinishWithError: error)
         }
@@ -138,7 +132,7 @@ public class SSDPDiscovery {
     /// Stop the discovery before the timeout.
     open func stop() {
         if self.socket != nil {
-            Log.info("Stop SSDP discovery")
+            print("Stop SSDP discovery")
             self.forceStop()
             self.delegate?.ssdpDiscoveryDidFinish(self)
         }
